@@ -1,0 +1,18 @@
+# Temporary
+tmp/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+._*
+
+# temporary folder if one
+tmp/
