@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "namespace": "kalantar-0",
+  "registry": "ghcr.io/kalantar",
+  "repo_name": "llm-d-router",
+  "storage_class": "ibm-spectrum-scale-fileset",
+  "is_openshift": true,
+  "container_runtime": "podman",
+  "created_at": "2026-06-08T00:08:30Z",
+  "pipeline_commit": "664591c",
+  "component_image": "ghcr.io/kalantar/llm-d-router:quartic-mk",
+  "stages": {
+    "setup": {
+      "status": "completed",
+      "completed_at": "2026-06-08T00:08:30Z",
+      "summary": "Namespace kalantar-0 configured, PVCs created, Tekton tasks deployed"
+    },
+    "prepare": {
+      "status": "pending"
+    },
+    "deploy": {
+      "status": "pending",
+      "last_completed_step": "build"
+    },
+    "results": {
+      "status": "pending"
+    }
+  },
+  "source_hashes": {
+    "ghcr.io/kalantar/llm-d-router:quartic-mk-constantcontrol": "af3bf907f61741a481dba467e4aca40da578de07",
+    "ghcr.io/kalantar/llm-d-router:af3bf907": "af3bf907f61741a481dba467e4aca40da578de07",
+    "ghcr.io/kalantar/llm-d-router:quartic-mk-quarticceiling": "af3bf907f61741a481dba467e4aca40da578de07"
+  },
+  "epp_image": "ghcr.io/kalantar/llm-d-router:quartic-mk"
+}

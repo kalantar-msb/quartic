@@ -1,0 +1,13 @@
+diff --git a/sim/cluster/gateway_queue.go b/sim/cluster/gateway_queue.go
+index 6a89aa0..eab1804 100644
+--- a/sim/cluster/gateway_queue.go
++++ b/sim/cluster/gateway_queue.go
+@@ -428,7 +428,7 @@ func (q *GatewayQueue) DequeueGated(saturation float64) *sim.Request {
+ 		// Single band always gets ceiling 1.0.
+ 		ceiling := 1.0
+ 		if numBands > 1 {
+-			ceiling = 1.0 - float64(i)*(1.0-q.usageLimitThreshold)/float64(numBands-1)
++			ceiling = 1.0 - float64(i)/float64(numBands-1)*saturation*saturation*saturation*saturation
+ 		}
+
+ 		// HoL blocking check BEFORE emptiness check (matches GIE processor.go:337-340).

@@ -1,0 +1,76 @@
+research_question: >
+  Under workloads that approach server saturation on llm-d, does the
+  exponential/quartic-ceiling treatment improve metrics for critical-priority
+  requests relative to sheddable-priority requests, beyond the run-to-run
+  noise observed in repeated baseline executions on the same workload?
+
+run_id: quartic-mk-2
+max_iterations: 5
+
+target_system:
+  name: "llm-d distributed inference (quartic flow-control study)"
+  description: >
+    llm-d is a distributed inferencing engine. Requests arrive at
+    llm-d-router (github.com/llm-d/llm-d-router), which applies a flow-control
+    algorithm and routes to vllm inference engines. This campaign compares
+    three router variants on a fixed vllm backend.
+
+    Router variants (each shipped as a pre-built container image; do NOT rebuild):
+      - baseline:  the default flow-control algorithm built into llm-d-router.
+                   Image: ghcr.io/kalantar/llm-d-router:<llm-d-router commit-id>
+                   Overlay: ${repo_path}/workspace/runs/quartic-mk-2/generated/baseline_config.yaml
+      - control:   a plugin that re-implements the default behavior; used to
+                   confirm the plugin harness itself is neutral.
+                   Image: ghcr.io/kalantar/llm-d-router:quartic-mk-2-constantcontrol
+                   Overlay: ${repo_path}/workspace/runs/quartic-mk-2/generated/constantcontrol/constantcontrol_config.yaml
+      - treatment: a new flow-control algorithm. Image tag uses "exponentialceiling",
+                   config path uses "quarticceiling" — both refer to the same arm.
+                   Image: ghcr.io/kalantar/llm-d-router:quartic-mk-2-exponentialceiling
+                   Overlay: ${repo_path}/workspace/runs/quartic-mk-2/generated/quarticceiling/quarticceiling_config.yaml
+
+    Base vllm scenario lives in ${repo_path}/baselines/*.yaml. A run is
+    "baseline overlay → optional control/treatment overlay" applied on top.
+
+    Workloads available in ${repo_path}/workloads/ — this campaign uses
+    balanced_20.yaml, balanced_30.yaml, balanced_40.yaml, balanced_50.yaml
+    (a load sweep intended to cross the saturation threshold).
+
+    Deployment is via the installed Tekton Pipeline `sim2real` on OpenShift
+    cluster pokprod001. Each run is a Tekton PipelineRun (templates in
+    ${repo_path}/workspace/runs/quartic-mk-2/cluster/pipelinerun-<workload>-<package>.yaml).
+    The pipeline deploys llm-d, runs the workload, and tears down. Per-run data
+    lands on data-pvc at /data/<runName>/<phase>/<workloadName>.
+
+    Capacity: namespaces kalantar-0, kalantar-1, kalantar-2, kalantar-3 are
+    available, each requires 4 GPUs per llm-d instance. Track GPU availability
+    and EXCLUDE cordoned/tainted nodes when computing free GPU. Do not deploy
+    so many instances that the cluster runs out of GPU.
+
+    Hard constraints:
+      - NO CHANGES to system-wide resources or any namespace outside
+        kalantar-{0,1,2,3}.
+      - No source-code modifications — variants ship as pre-built images.
+        Hypothesis bundle arms must be probe-style only (no `code_changes`).
+
+    See ${repo_path}/nous/nous.md for the full background.
+
+  repo_path: /Users/kalantar/projects/go.workspace/src/github.com/kalantar-msb/quartic
+  live_target: true
+
+  observable_metrics:
+    # All metrics are reported per priority class (critical, sheddable).
+    - ttft_p50_ms
+    - ttft_p95_ms
+    - e2e_p50_ms
+    - e2e_p95_ms
+    - tpot_mean_ms
+
+  controllable_knobs:
+    - router_variant            # one of: baseline | control | treatment
+    - workload                  # one of: balanced_20 | balanced_30 | balanced_40 | balanced_50
+    - namespace                 # one of: kalantar-0 | kalantar-1 | kalantar-2 | kalantar-3
+    - replication_count         # integer >= 1; repeats per (variant, workload) cell
+
+prompts:
+  methodology_layer: "prompts/methodology"
+  domain_adapter_layer: null

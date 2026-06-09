@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: vllm-qwen-qwe-079d55ee-wen3-14b
+  namespace: kalantar-0
+  labels:
+spec:
+  selector:
+    matchLabels:
+      llm-d.ai/inferenceServing: "true"
+      llm-d.ai/model: qwen-qwe-079d55ee-wen3-14b
+  podMetricsEndpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s

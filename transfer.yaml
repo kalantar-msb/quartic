@@ -1,0 +1,61 @@
+kind: sim2real-transfer
+version: 3
+
+scenario: quartic
+
+component:
+  repo: github.com/llm-d/llm-d-router
+  kind: EndpointPickerConfig
+  ref: af3bf907f61741a481dba467e4aca40da578de07
+  base_image:
+    hub: ghcr.io/llm-d
+    name: llm-d-router
+  build:
+    commands:
+      - "make build"
+      - "go test ./pkg/epp/framework/plugins/flowcontrol/usagelimits/..."
+
+algorithms:
+  - name: quarticceiling
+    source: algorithms/quartic_ceiling.go
+    defaults: quartic
+  - name: constantcontrol
+    source: algorithms/constant_ceiling_control.go
+    defaults: quartic
+
+baselines:
+  - name: quartic
+    scenario: baselines/quartic.yaml
+
+workloads:
+  - workloads/balanced_5.yaml
+  - workloads/balanced_8.yaml
+  - workloads/balanced_10.yaml
+  - workloads/balanced_15.yaml
+  # - workloads/balanced_20.yaml
+  # - workloads/balanced_30.yaml
+  # - workloads/balanced_40.yaml
+  # - workloads/balanced_50.yaml
+
+context:
+  text: |
+    Per-band dispatch ceiling for llm-d flow control. Two arms ship as
+    UsageLimitPolicy plugins under
+    pkg/epp/framework/plugins/flowcontrol/usagelimits/<arm>/policy.go,
+    each registered in cmd/epp/runner/runner.go via fwkplugin.Register
+    (existing plugin pattern at runner.go:509).
+
+    Treatment (quartic-ceiling-policy): ceiling[i] = 1.0 - i/(N-1) * sat^4,
+    where sat = SaturationDetector.Saturation(ctx, pool) and N = active
+    priority bands from shard.AllOrderedPriorityLevels(). Parameter-free.
+
+    Control (constant-ceiling-control): ceiling[i] = 1.0 for all i,
+    delivered through the same plugin framework to isolate framework
+    overhead from algorithm effect.
+
+    Both arms attach via flowControl.usageLimitPolicyPluginRef in the
+    EndpointPickerConfig CR. Two priority tiers (critical=100,
+    sheddable=-50) are defined as InferenceObjective CRs.
+  files:
+    - README.md
+    - config.md

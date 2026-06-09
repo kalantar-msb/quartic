@@ -1,0 +1,46 @@
+{
+  "run_name": "quartic-mk",
+  "run_dir": "workspace/runs/quartic-mk",
+  "scenario": "quartic",
+  "context_path": "workspace/context/quartic/e57dfe13b316.md",
+  "manifest_path": "transfer.yaml",
+  "baselines": [
+    {
+      "name": "quartic",
+      "sim_config": null,
+      "real_config": null,
+      "real_notes": ""
+    }
+  ],
+  "algorithms": [
+    {
+      "name": "quarticceiling",
+      "source": "algorithms/quartic_ceiling.go",
+      "config": null,
+      "defaults": "quartic"
+    },
+    {
+      "name": "constantcontrol",
+      "source": "algorithms/constant_ceiling_control.go",
+      "config": null,
+      "defaults": "quartic"
+    }
+  ],
+  "current_algorithm": "quarticceiling",
+  "algorithm_source": "algorithms/quartic_ceiling.go",
+  "algorithm_config": null,
+  "baseline_sim_config": null,
+  "baseline_real_config": null,
+  "baseline_real_notes": "",
+  "target": {
+    "repo": "github.com/llm-d/llm-d-router"
+  },
+  "build_commands": [
+    "make build",
+    "go test ./pkg/epp/framework/plugins/flowcontrol/usagelimits/..."
+  ],
+  "config_kind": "EndpointPickerConfig",
+  "context": {
+    "text": "Per-band dispatch ceiling for llm-d flow control. Two arms ship as\nUsageLimitPolicy plugins under\npkg/epp/framework/plugins/flowcontrol/usagelimits/<arm>/policy.go,\neach registered in cmd/epp/runner/runner.go via fwkplugin.Register\n(existing plugin pattern at runner.go:509).\n\nTreatment (quartic-ceiling-policy): ceiling[i] = 1.0 - i/(N-1) * sat^4,\nwhere sat = SaturationDetector.Saturation(ctx, pool) and N = active\npriority bands from shard.AllOrderedPriorityLevels(). Parameter-free.\n\nControl (constant-ceiling-control): ceiling[i] = 1.0 for all i,\ndelivered through the same plugin framework to isolate framework\noverhead from algorithm effect.\n\nBoth arms attach via flowControl.usageLimitPolicyPluginRef in the\nEndpointPickerConfig CR. Two priority tiers (critical=100,\nsheddable=-50) are defined as InferenceObjective CRs.\n"
+  }
+}

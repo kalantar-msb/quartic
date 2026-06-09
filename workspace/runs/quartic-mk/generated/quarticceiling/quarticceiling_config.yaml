@@ -1,0 +1,28 @@
+scenario:
+  - name: quartic
+
+    inferenceExtension:
+      pluginsConfigFile: custom-plugins.yaml
+      pluginsCustomConfig:
+        custom-plugins.yaml: |
+          apiVersion: llm-d.ai/v1alpha1
+          kind: EndpointPickerConfig
+          featureGates:
+            - flowControl
+          plugins:
+            - type: quartic-ceiling-policy
+              name: quartic-ceiling
+            - type: queue-scorer
+            - type: kv-cache-utilization-scorer
+            - type: prefix-cache-scorer
+          schedulingProfiles:
+            - name: default
+              plugins:
+                - pluginRef: queue-scorer
+                  weight: 2.0
+                - pluginRef: kv-cache-utilization-scorer
+                  weight: 2.0
+                - pluginRef: prefix-cache-scorer
+                  weight: 3.0
+          flowControl:
+            usageLimitPolicyPluginRef: "quartic-ceiling"

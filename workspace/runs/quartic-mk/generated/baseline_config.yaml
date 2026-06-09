@@ -1,0 +1,43 @@
+scenario:
+  - name: quartic
+
+    extraObjects:
+      - apiVersion: llm-d.ai/v1alpha2
+        kind: InferenceObjective
+        metadata:
+          name: critical
+        spec:
+          poolRef:
+            name: ${model.idLabel}-gaie
+          priority: 100
+      - apiVersion: llm-d.ai/v1alpha2
+        kind: InferenceObjective
+        metadata:
+          name: sheddable
+        spec:
+          poolRef:
+            name: ${model.idLabel}-gaie
+          priority: -50
+
+    inferenceExtension:
+      pluginsConfigFile: custom-plugins.yaml
+      pluginsCustomConfig:
+        custom-plugins.yaml: |
+          apiVersion: llm-d.ai/v1alpha1
+          kind: EndpointPickerConfig
+          featureGates:
+            - flowControl
+          plugins:
+            - type: queue-scorer
+            - type: kv-cache-utilization-scorer
+            - type: prefix-cache-scorer
+          schedulingProfiles:
+            - name: default
+              plugins:
+                - pluginRef: queue-scorer
+                  weight: 2.0
+                - pluginRef: kv-cache-utilization-scorer
+                  weight: 2.0
+                - pluginRef: prefix-cache-scorer
+                  weight: 3.0
+          flowControl: {}

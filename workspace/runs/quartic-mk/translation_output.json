@@ -1,0 +1,48 @@
+{
+  "algorithms": [
+    "quarticceiling",
+    "constantcontrol"
+  ],
+  "per_algorithm": {
+    "quarticceiling": {
+      "plugin_type": "quartic-ceiling-policy",
+      "files_created": [
+        "epp",
+        "pkg/epp/framework/plugins/flowcontrol/usagelimits/quarticceiling/policy.go",
+        "pkg/epp/framework/plugins/flowcontrol/usagelimits/quarticceiling/policy_test.go"
+      ],
+      "files_modified": [
+        "cmd/epp/runner/runner.go"
+      ],
+      "package": "quarticceiling",
+      "register_file": "cmd/epp/runner/runner.go",
+      "test_commands": [
+        "go test ./pkg/epp/framework/plugins/flowcontrol/usagelimits/..."
+      ],
+      "config_kind": "EndpointPickerConfig",
+      "treatment_config_generated": true,
+      "description": "Parameter-free quartic per-band dispatch ceiling UsageLimitPolicy: ceiling[i] = 1 - i/(N-1) * sat^4."
+    },
+    "constantcontrol": {
+      "plugin_type": "constant-ceiling-control",
+      "files_created": [
+        "pkg/epp/framework/plugins/flowcontrol/usagelimits/constantcontrol/policy.go",
+        "pkg/epp/framework/plugins/flowcontrol/usagelimits/constantcontrol/policy_test.go",
+        "pkg/epp/framework/plugins/flowcontrol/usagelimits/quarticceiling/policy.go",
+        "pkg/epp/framework/plugins/flowcontrol/usagelimits/quarticceiling/policy_test.go"
+      ],
+      "files_modified": [
+        "cmd/epp/runner/runner.go"
+      ],
+      "package": "constantcontrol",
+      "register_file": "cmd/epp/runner/runner.go",
+      "test_commands": [
+        "make build",
+        "go test ./pkg/epp/framework/plugins/flowcontrol/usagelimits/..."
+      ],
+      "config_kind": "EndpointPickerConfig",
+      "treatment_config_generated": true,
+      "description": "Parameter-free control-arm UsageLimitPolicy returning ceiling[i]=1.0 for all priority bands; mirrors quarticceiling sibling for framework-overhead isolation."
+    }
+  }
+}

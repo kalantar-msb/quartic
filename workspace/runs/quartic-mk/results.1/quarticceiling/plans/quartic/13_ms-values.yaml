@@ -1,0 +1,235 @@
+fullnameOverride: qwen-qwe-6986e55e-wen3-14b
+
+
+schedulerName: default-scheduler
+
+modelArtifacts:
+  name: Qwen/Qwen3-14B
+  uri: pvc://model-pvc/models/Qwen/Qwen3-14B
+  size: 1Ti
+  authSecretName: "hf-secret"
+  mountPath: /model-cache
+  labels:
+    llm-d.ai/inferenceServing: "true"
+    llm-d.ai/model: qwen-qwe-6986e55e-wen3-14b
+
+multinode: false
+
+accelerator:
+  type: nvidia
+
+  dra: false
+
+
+routing:
+  servicePort: 8000
+  proxy:
+    enabled: true
+    image: "ghcr.io/llm-d/llm-d-routing-sidecar:v0.8.0"
+    imagePullPolicy: Always
+    targetPort: 8200
+    connector: nixlv2
+    secure: false
+    zapEncoder: json
+    zapLogLevel: debug
+    debugLevel: 3
+
+
+decode:
+  create: true
+  replicas: 1
+
+  autoscaling:
+    enabled: false
+
+
+
+
+  acceleratorTypes:
+    labelKey: nvidia.com/gpu.product
+    labelValues:
+    - NVIDIA-H100-80GB-HBM3
+
+  parallelism:
+    tensor: 1
+    data: 1
+    dataLocal: 1
+    workers: 1
+
+
+
+
+
+
+
+
+
+
+  containers:
+  - name: "vllm"
+    image: "docker.io/vllm/vllm-openai:v0.20.2"
+    imagePullPolicy: IfNotPresent
+    mountModelVolume: true
+    modelCommand: custom
+    command:
+      - /bin/sh
+      - '-c'
+    args:
+      - |
+        /bin/true; vllm serve /model-cache/models/Qwen/Qwen3-14B \
+          --host 0.0.0.0 \
+          --served-model-name Qwen/Qwen3-14B \
+          --port $VLLM_METRICS_PORT \
+          --block-size $VLLM_BLOCK_SIZE \
+          --max-model-len $VLLM_MAX_MODEL_LEN \
+          --tensor-parallel-size $VLLM_TENSOR_PARALLELISM \
+          --gpu-memory-utilization $VLLM_ACCELERATOR_MEM_UTIL \
+          --enforce-eager \
+          --no-enable-log-requests \
+          --disable-uvicorn-access-log \
+          --max-num-seqs=256 \
+          --max-num-batched-tokens=2048 \
+          --enable-chunked-prefill \
+          --enable-prefix-caching \
+          --no-disable-uvicorn-access-log
+    env:
+      - name: VLLM_IS_DECODE
+        value: "1"
+      - name: HOME
+        value: "/tmp"
+      - name: HF_HOME
+        value: "/tmp/huggingface"
+      - name: MODEL_NAME
+        value: "Qwen/Qwen3-14B"
+      - name: MODEL_PATH
+        value: "models/Qwen/Qwen3-14B"
+      - name: VLLM_CACHE_ROOT
+        value: "/tmp/vllm"
+      - name: VLLM_WORKER_MULTIPROC_METHOD
+        value: "spawn"
+      - name: VLLM_LOGGING_LEVEL
+        value: "INFO"
+      - name: VLLM_ALLOW_LONG_MAX_MODEL_LEN
+        value: "1"
+      - name: VLLM_SERVER_DEV_MODE
+        value: "1"
+      - name: VLLM_INFERENCE_PORT
+        value: "8000"
+      - name: VLLM_METRICS_PORT
+        value: "8200"
+      - name: VLLM_BLOCK_SIZE
+        value: "16"
+      - name: VLLM_MAX_MODEL_LEN
+        value: "40960"
+      - name: VLLM_LOAD_FORMAT
+        value: "auto"
+      - name: VLLM_ACCELERATOR_MEM_UTIL
+        value: "0.9"
+      - name: VLLM_MAX_NUM_SEQ
+        value: "256"
+      - name: VLLM_TENSOR_PARALLELISM
+        value: "1"
+      - name: VLLM_MAX_NUM_BATCHED_TOKENS
+        value: "256"
+      - name: VLLM_NIXL_SIDE_CHANNEL_HOST
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      - name: VLLM_NIXL_SIDE_CHANNEL_PORT
+        value: "5557"
+      - name: UCX_TLS
+        value: "rc,sm,cuda_ipc,cuda_copy,tcp"
+      - name: UCX_SOCKADDR_TLS_PRIORITY
+        value: "tcp"
+      - name: POD_IP
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: status.podIP
+      - name: LLMDBENCH_POD_NS
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+
+    resources:
+      limits:
+        memory: 40Gi
+        cpu: "4"
+        nvidia.com/gpu: "1"
+      requests:
+        memory: 40Gi
+        cpu: "4"
+        nvidia.com/gpu: "1"
+    extraConfig:
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 8000
+        failureThreshold: 60
+        initialDelaySeconds: 30
+        periodSeconds: 30
+        timeoutSeconds: 5
+      livenessProbe:
+        tcpSocket:
+          port: 8000
+        failureThreshold: 3
+        periodSeconds: 5
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 8000
+        failureThreshold: 3
+        periodSeconds: 5
+    volumeMounts:
+
+  volumes:
+
+  monitoring:
+    podmonitor:
+      enabled: false
+
+prefill:
+  create: false
+
+extraObjects:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: qwen-qwe-6986e55e-wen3-14b-gaie-epp-llm-d
+    rules:
+    - apiGroups:
+      - llm-d.ai
+      resources:
+      - inferenceobjectives
+      - inferencemodelrewrites
+      verbs:
+      - get
+      - watch
+      - list
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: qwen-qwe-6986e55e-wen3-14b-gaie-epp-llm-d
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: qwen-qwe-6986e55e-wen3-14b-gaie-epp-llm-d
+    subjects:
+    - kind: ServiceAccount
+      name: qwen-qwe-6986e55e-wen3-14b-gaie-epp
+  - apiVersion: inference.networking.x-k8s.io/v1alpha2
+    kind: InferenceObjective
+    metadata:
+      name: critical
+    spec:
+      poolRef:
+        name: qwen-qwe-6986e55e-wen3-14b-gaie
+      priority: 100
+  - apiVersion: inference.networking.x-k8s.io/v1alpha2
+    kind: InferenceObjective
+    metadata:
+      name: sheddable
+    spec:
+      poolRef:
+        name: qwen-qwe-6986e55e-wen3-14b-gaie
+      priority: -50

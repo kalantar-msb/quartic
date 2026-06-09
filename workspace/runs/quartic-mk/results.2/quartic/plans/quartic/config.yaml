@@ -1,0 +1,884 @@
+_anchors:
+  agentgateway_version: v1.2.0
+  app_label: llm-d-benchmark-harness
+  block_size: 64
+  container_home: /tmp
+  cpu_16: '16'
+  cpu_32: '32'
+  cpu_4: '4'
+  ext_proc_port: 9002
+  gaie_version: v1.5.0
+  gpu_label_key: nvidia.com/gpu.product
+  gpu_label_value: NVIDIA-H100-80GB-HBM3
+  gpu_memory_util: 0.95
+  hf_home: /tmp/huggingface
+  inference_serving_label: 'true'
+  istio_version: 1.29.2
+  kv_connector: NixlConnector
+  kv_role: kv_both
+  llm-d-benchmark_version: v0.6.3
+  llm-d-cuda_version: v0.7.0
+  llm-d-inference-scheduler_version: v0.8.0
+  llm-d-inference-sim_version: v0.8.2
+  llm-d-routing-sidecar_version: v0.8.0
+  llm-d-uds-tokenizer_version: v0.8.0
+  logging_level: INFO
+  lws_version: 0.8.0
+  max_model_len: 16384
+  memory_128gi: 128Gi
+  memory_16gi: 16Gi
+  memory_256gi: 256Gi
+  memory_40gi: 40Gi
+  memory_4gi: 4Gi
+  memory_64gi: 64Gi
+  model_cache_base: /model-cache
+  model_name: facebook/opt-125m
+  model_path: models/facebook/opt-125m
+  model_short_name: facebook-opt-125m
+  parallelism_4gpu:
+    data: 1
+    dataLocal: 1
+    tensor: 4
+    workers: 4
+  parallelism_8gpu:
+    data: 1
+    dataLocal: 1
+    tensor: 8
+    workers: 8
+  parallelism_single:
+    data: 1
+    dataLocal: 1
+    tensor: 1
+    workers: 1
+  preprocess_script: /bin/true
+  probe_liveness:
+    failureThreshold: 3
+    periodSeconds: 5
+  probe_readiness:
+    failureThreshold: 3
+    path: /health
+    periodSeconds: 5
+  probe_startup:
+    failureThreshold: 60
+    initialDelaySeconds: 30
+    path: /health
+    periodSeconds: 30
+    timeoutSeconds: 5
+  prometheus_version: 5.3.0
+  pull_always: Always
+  pull_if_not_present: IfNotPresent
+  rsync_port: 20873
+  shm_16gi: 16Gi
+  shm_32gi: 32Gi
+  shm_64gi: 64Gi
+  storage_class: auto
+  vllm-openai_version: v0.20.2
+  vllm_port: 8200
+  vllm_service_port: 8000
+  worker_method: spawn
+  wva_version: 0.6.0
+  zmq_port: 5557
+accelerator:
+  resource: nvidia.com/gpu
+  type: nvidia
+affinity:
+  enabled: false
+  nodeSelector: {}
+  podAffinity: {}
+  podAntiAffinity: {}
+annotations:
+  common: {}
+  decode:
+    container: {}
+    pod: {}
+  prefill:
+    container: {}
+    pod: {}
+chartVersions:
+  agentgateway: v1.2.0
+  inferencePool: v1.5.0
+  istioBase: 1.29.2
+  istiod: 1.29.2
+  llmDInfra: v1.4.0
+  llmDModelservice: v0.4.13
+  lws: 0.8.0
+  prometheusAdapter: 5.3.0
+  wva: 0.6.0
+common: {}
+control:
+  contextSecretName: llmdbench-context
+  ignoreFailedValidation: true
+  waitPeriod: 10
+  waitTimeout: 900
+dataAccess:
+  rsyncPort: 20873
+  runAsUser: 0
+decode:
+  acceleratorType:
+    labelKey: nvidia.com/gpu.product
+    labelValue: NVIDIA-H100-80GB-HBM3
+  additionalVolumeMounts: []
+  additionalVolumes: []
+  autoscaling:
+    enabled: false
+  enabled: true
+  extraContainerConfig: {}
+  extraEnvVars: []
+  extraPodConfig: {}
+  initContainers: []
+  monitoring:
+    podmonitor:
+      annotations: {}
+      enabled: false
+      interval: 30s
+      labels: {}
+      metricRelabelings: []
+      path: /metrics
+      portName: metrics
+      relabelings: []
+  mountModelVolume: true
+  networkNr: ''
+  networkResource: ''
+  nodeSelector: {}
+  parallelism:
+    data: 1
+    dataLocal: 1
+    tensor: 1
+    workers: 1
+  probes:
+    liveness:
+      failureThreshold: 3
+      periodSeconds: 5
+    readiness:
+      failureThreshold: 3
+      path: /health
+      periodSeconds: 5
+    startup:
+      failureThreshold: 60
+      initialDelaySeconds: 30
+      path: /health
+      periodSeconds: 30
+      timeoutSeconds: 5
+  replicas: 1
+  resources:
+    limits:
+      cpu: '4'
+      memory: 40Gi
+    requests:
+      cpu: '4'
+      memory: 40Gi
+  shm:
+    size: 16Gi
+  vllm:
+    additionalFlags:
+    - --max-num-seqs=256
+    - --max-num-batched-tokens=2048
+    - --enable-chunked-prefill
+    - --enable-prefix-caching
+    - --no-disable-uvicorn-access-log
+    customCommand: null
+    customPreprocessCommand: null
+    imagePullPolicy: IfNotPresent
+    loggingLevel: INFO
+    port: 8200
+    servicePort: 8000
+    workerMultiprocMethod: spawn
+downloadJob:
+  backoffLimit: 3
+  mountPath: /cache
+  name: download-model
+dra:
+  enabled: false
+  type: nvidia
+experiment:
+  analyzeLocally: false
+  datasetDir: ''
+  datasetUrl: ''
+  resultsDir: /requests
+  workspaceDir: /workspace
+extraObjects:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: qwen-qwe-079d55ee-wen3-14b-gaie-epp-llm-d
+  rules:
+  - apiGroups:
+    - llm-d.ai
+    resources:
+    - inferenceobjectives
+    - inferencemodelrewrites
+    verbs:
+    - get
+    - watch
+    - list
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: qwen-qwe-079d55ee-wen3-14b-gaie-epp-llm-d
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: qwen-qwe-079d55ee-wen3-14b-gaie-epp-llm-d
+  subjects:
+  - kind: ServiceAccount
+    name: qwen-qwe-079d55ee-wen3-14b-gaie-epp
+- apiVersion: llm-d.ai/v1alpha2
+  kind: InferenceObjective
+  metadata:
+    name: critical
+  spec:
+    poolRef:
+      name: qwen-qwe-079d55ee-wen3-14b-gaie
+    priority: 100
+- apiVersion: llm-d.ai/v1alpha2
+  kind: InferenceObjective
+  metadata:
+    name: sheddable
+  spec:
+    poolRef:
+      name: qwen-qwe-079d55ee-wen3-14b-gaie
+    priority: -50
+fma:
+  chart:
+    url: oci://ghcr.io/llm-d-incubation/llm-d-fast-model-actuation/charts/fma-controllers
+    version: 0.6.0-alpha.11
+  crds:
+    inferenceServerConfig: https://raw.githubusercontent.com/llm-d-incubation/llm-d-fast-model-actuation/v0.6.0-alpha.11/config/crd/fma.llm-d.ai_inferenceserverconfigs.yaml
+    launcherConfig: https://raw.githubusercontent.com/llm-d-incubation/llm-d-fast-model-actuation/v0.6.0-alpha.11/config/crd/fma.llm-d.ai_launcherconfigs.yaml
+    launcherPopulatorConfig: https://raw.githubusercontent.com/llm-d-incubation/llm-d-fast-model-actuation/v0.6.0-alpha.11/config/crd/fma.llm-d.ai_launcherpopulationpolicies.yaml
+  deployment:
+    name: null
+  dualPod:
+    debugAcceleratorMemory: false
+    sleeperLimit: 2
+  enabled: false
+  image:
+    pullPolicy: IfNotPresent
+    repository: ghcr.io/llm-d-incubation/llm-d-fast-model-actuation
+    tag: v0.6.0-alpha.11
+  iterations: 1
+  labels:
+    stood-up-by: auto
+    stood-up-from: llm-d-benchmark
+    stood-up-via: fma
+  launcher:
+    customPreprocessCommands: []
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/llm-d-incubation/llm-d-fast-model-actuation/launcher
+      tag: v0.6.0-alpha.11
+    podTemplate:
+      metadata:
+        annotations: {}
+        labels:
+          stood-up-by: auto
+          stood-up-from: llm-d-benchmark
+          stood-up-via: fma
+    runtimeClassName: nvidia-legacy
+  launcherConfigurator:
+    port: 8001
+  launcherPopulatorConfigurator:
+    limitsCPU: 2
+    limitsMemory: 2Gi
+    requestsCPU: 100m
+    requestsMemory: 128Mi
+  modelMountPath: /model-cache
+  modelPvcName: model-pvc
+  mountModelVolume: true
+  requester:
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/llm-d-incubation/llm-d-fast-model-actuation/requester
+      tag: v0.6.0-alpha.11
+    limitsCPU: 1
+    limitsGPU: 1
+    limitsMemory: 250Mi
+    probePort: 8080
+    readinessProbeInitialDelay: 5
+    readinessProbePeriod: 10
+    spiPort: 8081
+gateway:
+  className: istio
+  logLevel: error
+  name: infra-llmdbench-inference-gateway
+  namespace: kalantar-0
+  providerNamespace: istio-system
+  resources:
+    limits:
+      cpu: '16'
+      memory: 16Gi
+    requests:
+      cpu: '4'
+      memory: 4Gi
+  service:
+    type: NodePort
+gatewayApiCrd:
+  crdUrlTemplate: github.com/kubernetes-sigs/gateway-api/config/crd?ref={revision}
+  inferenceExtensionRevision: v1.5.0
+  inferenceExtensionUrlTemplate: https://github.com/kubernetes-sigs/gateway-api-inference-extension/releases/download/{revision}/manifests.yaml
+  revision: v1.5.1
+gatewayProviders:
+  agentgateway:
+    helmRepository: oci://cr.agentgateway.dev/charts/
+    namespace: agentgateway-system
+harness:
+  condaEnvName: inference-perf-env
+  debug: false
+  executable: llm-d-benchmark.sh
+  inferencePerf:
+    rayonNumThreads: 4
+  loadParallelism: 1
+  name: inference-perf
+  namespace: kalantar-0
+  output: local
+  podLabel: llmdbench-harness-launcher
+  profile: sanity_random.yaml
+  resources:
+    cpu: 16
+    memory: 32Gi
+  waitTimeout: 3600
+helmRepositories:
+  agentgateway:
+    name: agentgateway
+    sourceRepo: https://github.com/agentgateway/agentgateway
+    url: oci://cr.agentgateway.dev/charts/
+  gaie:
+    sourceRepo: https://github.com/kubernetes-sigs/gateway-api-inference-extension
+  inferencePool:
+    sourceRepo: https://github.com/kubernetes-sigs/gateway-api-inference-extension
+  istio:
+    sourceRepo: https://github.com/istio/istio
+    url: https://istio-release.storage.googleapis.com/charts
+  llmDInfra:
+    sourceRepo: https://github.com/llm-d-incubation/llm-d-infra
+    url: https://llm-d-incubation.github.io/llm-d-infra/
+  llmDModelservice:
+    sourceRepo: https://github.com/llm-d-incubation/llm-d-modelservice
+    url: https://llm-d-incubation.github.io/llm-d-modelservice/
+  lws:
+    sourceRepo: https://github.com/kubernetes-sigs/lws
+  prometheusAdapter:
+    name: prometheus-adapter
+    sourceRepo: https://github.com/prometheus-community/helm-charts
+    url: https://prometheus-community.github.io/helm-charts
+  wva:
+    name: workload-variant-autoscaler
+    sourceRepo: https://github.com/llm-d/llm-d-workload-variant-autoscaler
+    url: oci://ghcr.io/llm-d/workload-variant-autoscaler
+huggingface:
+  enabled: true
+  secretName: hf-secret
+  token: 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
+  tokenBase64: aGZfdnhBbVZibERmaWVIYklrWXV1Q1Ria2llb1l3ek1Ld1dvZA==
+  tokenKey: HF_TOKEN
+idleCleanup:
+  dryRun: false
+  enabled: false
+  idleWindow: 24h
+  image: ''
+  prometheusUrl: ''
+  schedule: 0 * * * *
+images:
+  benchmark:
+    pullPolicy: Always
+    repository: ghcr.io/llm-d/llm-d-benchmark
+    sourceRepo: https://github.com/llm-d/llm-d-benchmark
+    tag: v0.6.3
+  inferenceScheduler:
+    pullPolicy: Always
+    repository: ghcr.io/kalantar/llm-d-router
+    sourceRepo: https://github.com/llm-d/llm-d-inference-scheduler
+    tag: af3bf907
+  python:
+    repository: python
+    sourceRepo: https://hub.docker.com/_/python
+    tag: '3.10'
+  routingSidecar:
+    pullPolicy: IfNotPresent
+    repository: ghcr.io/llm-d/llm-d-routing-sidecar
+    sourceRepo: https://github.com/llm-d/llm-d-routing-sidecar
+    tag: v0.8.0
+  udsTokenizer:
+    pullPolicy: IfNotPresent
+    repository: ghcr.io/llm-d/llm-d-uds-tokenizer
+    sourcePath: services/uds_tokenizer
+    sourceRepo: https://github.com/llm-d/llm-d-kv-cache
+    tag: v0.8.0
+  vllm:
+    pullPolicy: Always
+    repository: docker.io/vllm/vllm-openai
+    sourceRepo: https://github.com/vllm-project/vllm
+    tag: v0.20.2
+  vllmOpenai:
+    pullPolicy: Always
+    repository: docker.io/vllm/vllm-openai
+    sourceRepo: https://github.com/vllm-project/vllm
+    tag: v0.20.2
+inferenceExtension:
+  extProcPort: 9002
+  inferencePoolProviderConfig: {}
+  monitoring:
+    interval: 10s
+    prometheus:
+      auth:
+        enabled: true
+      enabled: true
+    secretName: inference-gateway-sa-metrics-reader-secret
+  pluginsConfigFile: custom-plugins.yaml
+  pluginsCustomConfig:
+    custom-plugins.yaml: "apiVersion: llm-d.ai/v1alpha1\nkind: EndpointPickerConfig\n\
+      featureGates:\n  - flowControl\nplugins:\n  - type: queue-scorer\n  - type:\
+      \ kv-cache-utilization-scorer\n  - type: prefix-cache-scorer\nschedulingProfiles:\n\
+      \  - name: default\n    plugins:\n      - pluginRef: queue-scorer\n        weight:\
+      \ 2.0\n      - pluginRef: kv-cache-utilization-scorer\n        weight: 2.0\n\
+      \      - pluginRef: prefix-cache-scorer\n        weight: 3.0\nflowControl: {}\n"
+  replicas: 1
+  sidecar:
+    enabled: false
+    env:
+    - name: TOKENIZERS_DIR
+      value: /tokenizers
+    - name: HF_HOME
+      value: /tokenizers
+    imagePullPolicy: IfNotPresent
+    name: tokenizer-uds
+    volumeMounts:
+    - mountPath: /tokenizers
+      name: tokenizers
+    - mountPath: /tmp/tokenizer
+      name: tokenizer-uds
+  verbosity: 5
+  volumeMounts: []
+  volumes: []
+  zmqPort: 5557
+labels:
+  app: llm-d-benchmark-harness
+  inferenceServing: 'true'
+lws:
+  helmRepository: oci://ghcr.io/kubernetes-sigs/lws
+  namespace: lws-system
+model:
+  blockSize: 16
+  cacheBase: /model-cache
+  gpuMemoryUtilization: 0.9
+  huggingfaceId: Qwen/Qwen3-14B
+  idLabel: qwen-qwe-079d55ee-wen3-14b
+  maxModelLen: 40960
+  name: Qwen/Qwen3-14B
+  path: models/Qwen/Qwen3-14B
+  shortName: qwen-qwen3-14b
+  size: 1Ti
+modelArtifacts:
+  extraLabels: {}
+  mountPath: /model-cache
+model_id_label: qwen-qwe-079d55ee-wen3-14b
+modelservice:
+  enabled: true
+  uriProtocol: pvc
+monitoring:
+  enableUserWorkload: true
+  enabled: true
+  installPrometheusCrds: false
+  metricsPath: /metrics
+  metricsScrapeEnabled: false
+  podmonitor:
+    enabled: true
+  prometheusCrdUrls:
+  - https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+  - https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+  scrapeInterval: 30s
+multinode:
+  enabled: false
+namespace:
+  labels:
+    podSecurity:
+      audit: privileged
+      warn: privileged
+  name: kalantar-0
+openshiftMonitoring:
+  userWorkloadMonitoringNamespace: openshift-user-workload-monitoring
+prefill:
+  acceleratorType:
+    labelKey: nvidia.com/gpu.product
+    labelValue: NVIDIA-H100-80GB-HBM3
+  additionalVolumeMounts: []
+  additionalVolumes: []
+  autoscaling:
+    enabled: false
+  enabled: false
+  extraContainerConfig: {}
+  extraEnvVars: []
+  extraPodConfig: {}
+  initContainers: []
+  monitoring:
+    podmonitor:
+      annotations: {}
+      enabled: false
+      interval: 30s
+      labels: {}
+      metricRelabelings: []
+      path: /metrics
+      portName: metrics
+      relabelings: []
+  mountModelVolume: true
+  networkNr: ''
+  networkResource: ''
+  nodeSelector: {}
+  parallelism:
+    data: 1
+    dataLocal: 1
+    tensor: 1
+    workers: 1
+  probes:
+    liveness:
+      failureThreshold: 3
+      periodSeconds: 5
+    readiness:
+      failureThreshold: 3
+      path: /health
+      periodSeconds: 5
+    startup:
+      failureThreshold: 60
+      initialDelaySeconds: 30
+      path: /health
+      periodSeconds: 30
+      timeoutSeconds: 5
+  replicas: 0
+  resources:
+    limits:
+      cpu: '4'
+      memory: 40Gi
+    requests:
+      cpu: '4'
+      memory: 40Gi
+  vllm:
+    additionalFlags: []
+    customCommand: null
+    customPreprocessCommand: null
+    imagePullPolicy: IfNotPresent
+    loggingLevel: INFO
+    port: 8200
+    servicePort: 8000
+    workerMultiprocMethod: spawn
+release: llmdbench
+resourcePresets:
+  large:
+    decode:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 4
+        workers: 4
+      resources:
+        limits:
+          cpu: '32'
+          memory: 256Gi
+        requests:
+          cpu: '32'
+          memory: 256Gi
+      shm:
+        size: 64Gi
+    prefill:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 4
+        workers: 4
+      resources:
+        limits:
+          cpu: '32'
+          memory: 256Gi
+        requests:
+          cpu: '32'
+          memory: 256Gi
+  medium:
+    decode:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 1
+        workers: 1
+      resources:
+        limits:
+          cpu: '16'
+          memory: 64Gi
+        requests:
+          cpu: '16'
+          memory: 64Gi
+      shm:
+        size: 16Gi
+    prefill:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 1
+        workers: 1
+      resources:
+        limits:
+          cpu: '16'
+          memory: 64Gi
+        requests:
+          cpu: '16'
+          memory: 64Gi
+  small:
+    decode:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 1
+        workers: 1
+      resources:
+        limits:
+          cpu: '4'
+          memory: 40Gi
+        requests:
+          cpu: '4'
+          memory: 40Gi
+      shm:
+        size: 16Gi
+    prefill:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 1
+        workers: 1
+      resources:
+        limits:
+          cpu: '4'
+          memory: 40Gi
+        requests:
+          cpu: '4'
+          memory: 40Gi
+  xlarge:
+    decode:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 8
+        workers: 8
+      resources:
+        limits:
+          cpu: '32'
+          memory: 256Gi
+        requests:
+          cpu: '32'
+          memory: 256Gi
+      shm:
+        size: 64Gi
+    prefill:
+      parallelism:
+        data: 1
+        dataLocal: 1
+        tensor: 8
+        workers: 8
+      resources:
+        limits:
+          cpu: '32'
+          memory: 256Gi
+        requests:
+          cpu: '32'
+          memory: 256Gi
+routing:
+  connector: nixlv2
+  debugLevel: 3
+  proxy:
+    enabled: true
+    imagePullPolicy: Always
+    targetPort: 8200
+    zapEncoder: json
+    zapLogLevel: debug
+  secure: false
+  servicePort: 8000
+schedulerName: default-scheduler
+serviceAccount:
+  name: inference-perf-runner
+serviceAccountOverride: ''
+sharedInfraStackIndex: 1
+siblingStacks:
+- modelName: Qwen/Qwen3-14B
+  name: quartic
+  standalone: false
+stackIndex: 1
+standalone:
+  acceleratorType:
+    labelKey: nvidia.com/gpu.product
+    labelValue: NVIDIA-H100-80GB-HBM3
+  additionalVolumeMounts: []
+  additionalVolumes: []
+  deployment:
+    name: null
+  enabled: false
+  extraContainerConfig: {}
+  extraEnvVars: []
+  extraPodConfig: {}
+  extraPodLabels: {}
+  image:
+    pullPolicy: Always
+    repository: docker.io/vllm/vllm-openai
+    tag: v0.9.2
+  initContainers: []
+  labels:
+    stood-up-by: auto
+    stood-up-from: llm-d-benchmark
+    stood-up-via: standalone
+  launcher:
+    args: null
+    customPreprocessCommand: null
+    enabled: false
+    image:
+      repository: null
+      tag: null
+    imagePullPolicy: Always
+    port: 8001
+    vllmPort: 8002
+  modelMountPath: /model-cache
+  modelPvcName: model-pvc
+  mountModelVolume: true
+  networkNr: ''
+  networkResource: ''
+  nodeSelector: {}
+  parallelism:
+    tensor: 1
+  podAnnotations: {}
+  probes:
+    liveness:
+      failureThreshold: 3
+      periodSeconds: 5
+    readiness:
+      failureThreshold: 3
+      periodSeconds: 5
+    startup:
+      failureThreshold: 60
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 5
+  replicas: 1
+  resources:
+    limits:
+      cpu: '4'
+      memory: 40Gi
+    requests:
+      cpu: '4'
+      memory: 40Gi
+  role: both
+  schedulerName: default-scheduler
+  service:
+    additionalPorts: []
+    annotations: {}
+    name: null
+    port: 80
+    type: ClusterIP
+  vllm:
+    additionalFlags: []
+    customCommand: null
+    customPreprocessCommand: null
+    enablePrefixCaching: false
+    loadFormat: auto
+    loggingLevel: INFO
+    modelLoaderExtraConfig: '{}'
+    port: 8000
+    preprocessCommand: /bin/true
+    workerMultiprocMethod: spawn
+storage:
+  downloadMaxRetries: 2
+  downloadTimeout: 2400
+  extraPvc:
+    accessModes:
+    - ReadWriteMany
+    name: ''
+    size: 10Gi
+    storageClassName: auto
+    volumeMode: Filesystem
+  modelPvc:
+    accessModes:
+    - ReadWriteMany
+    name: model-pvc
+    size: 300Gi
+    storageClassName: auto
+  workloadPvc:
+    accessModes:
+    - ReadWriteMany
+    name: workload-pvc
+    size: 20Gi
+    storageClassName: auto
+vllmCommon:
+  containerHome: /tmp
+  ephemeralStorage: ''
+  ephemeralStorageResource: ephemeral-storage
+  flags:
+    allowLongMaxModelLen: '1'
+    disableLogRequests: true
+    disableUvicornAccessLog: true
+    enforceEager: true
+    serverDevMode: '1'
+  hfHome: /tmp/huggingface
+  host: 0.0.0.0
+  inferencePort: 8000
+  kvEvents:
+    enabled: false
+    port: 5557
+    publisher: zmq
+    topicPrefix: kv
+  kvTransfer:
+    connector: NixlConnector
+    enabled: false
+    role: kv_both
+  networkNr: ''
+  networkResource: ''
+  nixlSideChannelPort: '5557'
+  preprocessScript: /bin/true
+  priorityClassName: ''
+  pullSecret: ''
+  ucxSockaddrTlsPriority: tcp
+  ucxTls: rc,sm,cuda_ipc,cuda_copy,tcp
+  volumeMounts: []
+  volumes: []
+workDir: /workspace/data/quartic-mk/plans/quartic/balanced_10
+wva:
+  controller:
+    enabled: true
+  enabled: false
+  hpa:
+    behavior:
+      scaleDown:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        stabilizationWindowSeconds: 120
+      scaleUp:
+        policies:
+        - periodSeconds: 15
+          type: Percent
+          value: 100
+        stabilizationWindowSeconds: 120
+    enabled: true
+    maxReplicas: 16
+    minReplicas: 1
+    targetAvgValue: 1
+  image:
+    repository: ghcr.io/llm-d/llm-d-workload-variant-autoscaler
+    tag: ref-0c38a349
+  metrics:
+    enabled: true
+    port: 8443
+    secure: true
+  namespace: kalantar-0
+  namespaceScoped: true
+  prometheus:
+    baseUrl: https://thanos-querier.openshift-monitoring.svc.cluster.local
+    port: 9091
+  replicaCount: 1
+  variantAutoscaling:
+    enabled: true
+    slo:
+      tpot: 10
+      ttft: 1000
+    variantCost: '10.0'
+  vllmService:
+    enabled: true
+    interval: 15s
+    nodePortMax: 32767
+    nodePortMin: 30000
+    scheme: http
+  wellLitPath: inference-scheduling

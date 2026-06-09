@@ -1,0 +1,16 @@
+baseline_balanced_mid_s42 6.12s
+baseline_balanced_under_s42 3.64s
+baseline_blindspot_mid_s42 10.57s
+baseline_blindspot_under_s42 7.23s
+baseline_chatbot_mid_s42 43.30s
+baseline_chatbot_under_s42 10.26s
+baseline_codecompletion_mid_s42 8.14s
+baseline_codecompletion_under_s42 8.29s
+treatment_balanced_mid_s42 5.72s
+treatment_balanced_under_s42 3.60s
+treatment_blindspot_mid_s42 10.30s
+treatment_blindspot_under_s42 7.21s
+treatment_chatbot_mid_s42 45.56s
+treatment_chatbot_under_s42 10.31s
+treatment_codecompletion_mid_s42 8.24s
+treatment_codecompletion_under_s42 8.31s

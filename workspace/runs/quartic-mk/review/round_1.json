@@ -1,0 +1,14 @@
+{
+  "round": 1,
+  "consensus": true,
+  "approve_count": 1,
+  "total_successful": 1,
+  "reviews": [
+    {
+      "model": "agent-reviewer",
+      "verdict": "APPROVE",
+      "issues": [],
+      "summary": "VERDICT: APPROVE\n\nVerification summary (one line per criterion):\n- Fidelity: formula `ceiling[i] = 1.0 - i/(N-1) * sat^4` translated verbatim from algorithms/quartic_ceiling.go (sat^4 inline multiplication, n<=1 guard preserved with single-band returning 1.0); signals `saturation` and `priorities` consumed directly from the UsageLimitPolicy.ComputeLimit arguments.\n- Code quality: Factory signature `(name string, _ *json.Decoder, _ plugin.Handle) (plugin.Plugin, error)` matches the target-repo convention from context (translated from sim's `json.RawMessage`); license header + package doc present; tests cover PolicyType const, Factory with `StrictDecoder(nil)` and bare nil, n=0/1/2/4 bands, sat=0/0.5/0.8/0.9/1.0 reference points, multi-band monotonicity, and a Factory→ComputeLimit round-trip; no unused imports.\n- Registration: TypeConst=`quartic-ceiling-policy`, Factory=`quarticceiling.Factory`, registration file=`cmd/epp/runner/runner.go` (import line 82, `fwkplugin.Register(quarticceiling.PolicyType, quarticceiling.Factory)` at line 515 in the \"Flow Control plugins\" block, adjacent to `usagelimits.StaticUsageLimitPolicyType` as the AGENTS guidance requests).\n- Config: overlay is a valid scenario list with a single dict named `quartic`; plugin types `quartic-ceiling-policy`, `queue-scorer`, `kv-cache-utilization-scorer`, `prefix-cache-scorer` all registered (expert-confirmed); `usageLimitPolicyPluginRef: \"quartic-ceiling\"` resolves to the named plugin instance.\n- Assembly: overlay YAML well-formed, scenario name `quartic` matches experiment scenario, `inferenceExtension.pluginsCustomConfig` carries plugin YAML as a properly-escaped block scalar, `treatment_config_generated: true` set in quarticceiling_output.json.\n- Treatment config: parameter-free (algorithm uses only mathematical constants 0.0/1.0 and the dynamic `i/(N-1)*sat^4` term); no config struct or `parameters:` block required, none present — correct."
+    }
+  ]
+}

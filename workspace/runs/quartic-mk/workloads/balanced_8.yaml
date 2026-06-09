@@ -1,0 +1,26 @@
+# Balanced 30 QPS — Qwen3-14B on 4x H100 TP=1
+#
+# Expected saturation ~0.3-0.4, quartic begins to engage on bursts.
+# Tier mix: critical 50%, sheddable 50%
+
+version: "2"
+seed: 42
+category: language
+aggregate_rate: 8
+num_requests: 4000
+
+clients:
+  - id: "critical"
+    slo_class: "critical"
+    rate_fraction: 0.50
+    streaming: true
+    arrival: {process: poisson}
+    input_distribution: {type: gaussian, params: {mean: 1024, std_dev: 256, min: 256, max: 2048}}
+    output_distribution: {type: gaussian, params: {mean: 256, std_dev: 64, min: 32, max: 512}}
+  - id: "sheddable"
+    slo_class: "sheddable"
+    rate_fraction: 0.50
+    streaming: true
+    arrival: {process: poisson}
+    input_distribution: {type: gaussian, params: {mean: 1024, std_dev: 256, min: 256, max: 2048}}
+    output_distribution: {type: gaussian, params: {mean: 256, std_dev: 64, min: 32, max: 512}}

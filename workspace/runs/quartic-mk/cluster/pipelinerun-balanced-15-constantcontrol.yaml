@@ -1,0 +1,87 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: constantcontrol-balanced-15-quartic-mk
+  namespace: kalantar-0
+spec:
+  params:
+  - name: experimentId
+    value: quartic-mk
+  - name: runName
+    value: quartic-mk
+  - name: namespace
+    value: kalantar-0
+  - name: phase
+    value: constantcontrol
+  - name: scenarioContent
+    value: "scenario:\n- decode:\n    acceleratorType:\n      labelKey: nvidia.com/gpu.product\n\
+      \      labelValue: NVIDIA-H100-80GB-HBM3\n    replicas: 1\n    vllm:\n     \
+      \ additionalFlags:\n      - --max-num-seqs=256\n      - --max-num-batched-tokens=2048\n\
+      \      - --enable-chunked-prefill\n      - --enable-prefix-caching\n      -\
+      \ --no-disable-uvicorn-access-log\n      loggingLevel: INFO\n  extraObjects:\n\
+      \  - apiVersion: rbac.authorization.k8s.io/v1\n    kind: Role\n    metadata:\n\
+      \      name: ${model.idLabel}-gaie-epp-llm-d\n    rules:\n    - apiGroups:\n\
+      \      - llm-d.ai\n      resources:\n      - inferenceobjectives\n      - inferencemodelrewrites\n\
+      \      verbs:\n      - get\n      - watch\n      - list\n  - apiVersion: rbac.authorization.k8s.io/v1\n\
+      \    kind: RoleBinding\n    metadata:\n      name: ${model.idLabel}-gaie-epp-llm-d\n\
+      \    roleRef:\n      apiGroup: rbac.authorization.k8s.io\n      kind: Role\n\
+      \      name: ${model.idLabel}-gaie-epp-llm-d\n    subjects:\n    - kind: ServiceAccount\n\
+      \      name: ${model.idLabel}-gaie-epp\n  - apiVersion: llm-d.ai/v1alpha2\n\
+      \    kind: InferenceObjective\n    metadata:\n      name: critical\n    spec:\n\
+      \      poolRef:\n        name: ${model.idLabel}-gaie\n      priority: 100\n\
+      \  - apiVersion: llm-d.ai/v1alpha2\n    kind: InferenceObjective\n    metadata:\n\
+      \      name: sheddable\n    spec:\n      poolRef:\n        name: ${model.idLabel}-gaie\n\
+      \      priority: -50\n  huggingface:\n    secretName: hf-secret\n  images:\n\
+      \    inferenceScheduler:\n      pullPolicy: Always\n      repository: ghcr.io/kalantar/llm-d-router\n\
+      \      tag: quartic-mk-constantcontrol\n  inferenceExtension:\n    pluginsConfigFile:\
+      \ custom-plugins.yaml\n    pluginsCustomConfig:\n      custom-plugins.yaml:\
+      \ \"apiVersion: llm-d.ai/v1alpha1\\nkind: EndpointPickerConfig\\n\\\n      \
+      \  featureGates:\\n  - flowControl\\nplugins:\\n  - type: constant-ceiling-control\\\
+      n\\\n        \\    name: constant-ceiling\\n  - type: queue-scorer\\n  - type:\
+      \ kv-cache-utilization-scorer\\n\\\n        \\  - type: prefix-cache-scorer\\\
+      nschedulingProfiles:\\n  - name: default\\n \\\n        \\   plugins:\\n   \
+      \   - pluginRef: queue-scorer\\n        weight: 2.0\\n     \\\n        \\ -\
+      \ pluginRef: kv-cache-utilization-scorer\\n        weight: 2.0\\n      - pluginRef:\\\
+      \n        \\ prefix-cache-scorer\\n        weight: 3.0\\nflowControl:\\n  usageLimitPolicyPluginRef:\\\
+      \n        \\ \\\"constant-ceiling\\\"\\n\"\n    verbosity: '5'\n  model:\n \
+      \   blockSize: 16\n    gpuMemoryUtilization: 0.9\n    huggingfaceId: Qwen/Qwen3-14B\n\
+      \    maxModelLen: 40960\n    name: Qwen/Qwen3-14B\n    path: models/Qwen/Qwen3-14B\n\
+      \    shortName: qwen-qwen3-14b\n    size: 1Ti\n  name: quartic\n"
+  - name: specContent
+    value: "base_dir: /workspace/source/llm-d-benchmark\n\nvalues_file:\n  path: /workspace/source/llm-d-benchmark/config/templates/values/defaults.yaml\n\
+      \ntemplate_dir:\n  path: /workspace/source/llm-d-benchmark/config/templates/jinja\n\
+      \nscenario_file:\n  path: /tmp/llmdbench-config/scenario.yaml\n"
+  - name: workloadName
+    value: balanced_15
+  - name: workloadSpec
+    value: "{aggregate_rate: 15, category: language, clients: [{arrival: {process:\
+      \ poisson}, id: critical,\n      input_distribution: {params: {max: 2048, mean:\
+      \ 1024, min: 256, std_dev: 256},\n        type: gaussian}, output_distribution:\
+      \ {params: {max: 512, mean: 256, min: 32,\n          std_dev: 64}, type: gaussian},\
+      \ rate_fraction: 0.5, slo_class: critical,\n      streaming: true}, {arrival:\
+      \ {process: poisson}, id: sheddable, input_distribution: {\n        params:\
+      \ {max: 2048, mean: 1024, min: 256, std_dev: 256}, type: gaussian},\n      output_distribution:\
+      \ {params: {max: 512, mean: 256, min: 32, std_dev: 64}, type: gaussian},\n \
+      \     rate_fraction: 0.5, slo_class: sheddable, streaming: true}], num_requests:\
+      \ 7500,\n  seed: 42, version: '2'}"
+  - name: benchmarkGitRepoUrl
+    value: https://github.com/llm-d/llm-d-benchmark.git
+  - name: benchmarkGitCommit
+    value: 085c8a12ab79c21c33443bf8499467b53beeb764
+  - name: blisGitRepoUrl
+    value: https://github.com/inference-sim/inference-sim.git
+  - name: blisGitCommit
+    value: 99e382dd2996454e1a24e84799b92ad3756b006c
+  - name: model
+    value: Qwen/Qwen3-14B
+  pipelineRef:
+    name: sim2real
+  timeouts:
+    pipeline: 4h
+  workspaces:
+  - name: data-storage
+    persistentVolumeClaim:
+      claimName: data-pvc
+  - name: source
+    persistentVolumeClaim:
+      claimName: source-pvc

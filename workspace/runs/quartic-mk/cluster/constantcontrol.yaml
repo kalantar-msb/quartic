@@ -1,0 +1,85 @@
+scenario:
+- decode:
+    acceleratorType:
+      labelKey: nvidia.com/gpu.product
+      labelValue: NVIDIA-H100-80GB-HBM3
+    replicas: 1
+    vllm:
+      additionalFlags:
+      - --max-num-seqs=256
+      - --max-num-batched-tokens=2048
+      - --enable-chunked-prefill
+      - --enable-prefix-caching
+      - --no-disable-uvicorn-access-log
+      loggingLevel: INFO
+  extraObjects:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: ${model.idLabel}-gaie-epp-llm-d
+    rules:
+    - apiGroups:
+      - llm-d.ai
+      resources:
+      - inferenceobjectives
+      - inferencemodelrewrites
+      verbs:
+      - get
+      - watch
+      - list
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: ${model.idLabel}-gaie-epp-llm-d
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: ${model.idLabel}-gaie-epp-llm-d
+    subjects:
+    - kind: ServiceAccount
+      name: ${model.idLabel}-gaie-epp
+  - apiVersion: llm-d.ai/v1alpha2
+    kind: InferenceObjective
+    metadata:
+      name: critical
+    spec:
+      poolRef:
+        name: ${model.idLabel}-gaie
+      priority: 100
+  - apiVersion: llm-d.ai/v1alpha2
+    kind: InferenceObjective
+    metadata:
+      name: sheddable
+    spec:
+      poolRef:
+        name: ${model.idLabel}-gaie
+      priority: -50
+  huggingface:
+    secretName: hf-secret
+  images:
+    inferenceScheduler:
+      pullPolicy: Always
+      repository: ghcr.io/kalantar/llm-d-router
+      tag: quartic-mk-constantcontrol
+  inferenceExtension:
+    pluginsConfigFile: custom-plugins.yaml
+    pluginsCustomConfig:
+      custom-plugins.yaml: "apiVersion: llm-d.ai/v1alpha1\nkind: EndpointPickerConfig\n\
+        featureGates:\n  - flowControl\nplugins:\n  - type: constant-ceiling-control\n\
+        \    name: constant-ceiling\n  - type: queue-scorer\n  - type: kv-cache-utilization-scorer\n\
+        \  - type: prefix-cache-scorer\nschedulingProfiles:\n  - name: default\n \
+        \   plugins:\n      - pluginRef: queue-scorer\n        weight: 2.0\n     \
+        \ - pluginRef: kv-cache-utilization-scorer\n        weight: 2.0\n      - pluginRef:\
+        \ prefix-cache-scorer\n        weight: 3.0\nflowControl:\n  usageLimitPolicyPluginRef:\
+        \ \"constant-ceiling\"\n"
+    verbosity: '5'
+  model:
+    blockSize: 16
+    gpuMemoryUtilization: 0.9
+    huggingfaceId: Qwen/Qwen3-14B
+    maxModelLen: 40960
+    name: Qwen/Qwen3-14B
+    path: models/Qwen/Qwen3-14B
+    shortName: qwen-qwen3-14b
+    size: 1Ti
+  name: quartic

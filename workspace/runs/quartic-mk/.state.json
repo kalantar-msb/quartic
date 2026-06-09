@@ -1,0 +1,55 @@
+{
+  "run_name": "quartic-mk",
+  "scenario": "quartic",
+  "phases": {
+    "init": {
+      "status": "done",
+      "timestamp": "2026-06-08T00:47:26.063236+00:00"
+    },
+    "context": {
+      "status": "done",
+      "timestamp": "2026-06-08T00:47:26.102268+00:00",
+      "hash": "e57dfe13b316",
+      "cached": false,
+      "path": "/Users/kalantar/projects/go.workspace/src/github.com/kalantar-msb/quartic/workspace/context/quartic/e57dfe13b316.md",
+      "context_file_prepared": true,
+      "context_file_populated": true
+    },
+    "baseline_derivation": {
+      "status": "done",
+      "user_approved": true,
+      "timestamp": "2026-06-08T01:04:45.140749+00:00"
+    },
+    "treatment_derivation": {
+      "status": "done",
+      "user_approved": true,
+      "timestamp": "2026-06-08T10:33:54.762539+00:00"
+    },
+    "translate": {
+      "status": "done",
+      "timestamp": "2026-06-08T13:38:56.575960+00:00",
+      "algorithms": [
+        "quarticceiling",
+        "constantcontrol"
+      ]
+    },
+    "assembly": {
+      "status": "done",
+      "timestamp": "2026-06-08T18:37:14.433838+00:00",
+      "packages": [
+        "quartic",
+        "quarticceiling",
+        "constantcontrol"
+      ]
+    },
+    "summary": {
+      "status": "done",
+      "timestamp": "2026-06-08T18:37:14.435121+00:00"
+    },
+    "gate": {
+      "status": "done",
+      "timestamp": "2026-06-08T18:37:17.528968+00:00",
+      "verdict": "READY TO DEPLOY"
+    }
+  }
+}
