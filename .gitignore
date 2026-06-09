@@ -16,3 +16,5 @@ build/
 
 # temporary folder if one
 tmp/
+
+05_namespace_sa_rbac_secret.yaml
