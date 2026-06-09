@@ -16,11 +16,6 @@ An image embedding the default implementation is ghcr.io/kalantar/llm-d-router:<
 To deploy it, use the default router overlay:
 ${EXPERIMENT_ROOT}/workspace/runs/${RUN}/generated/baseline_config.yaml (which is applied on top of the base vllm scenario definition)
 
-We defined a plugin that reimplements this default behavior. We call it the "control". It is available in image ghcr.io/kalantar/llm-d-router:${RUN}-constantcontrol
-To deploy and configure it use the scenario overlay
-${EXPERIMENT_ROOT}/workspace/runs/${RUN}/generated/constantcontrol/constantcontrol_config.yaml
-(which should be applied over the baseline_config and over the vllm spec)
-
 We defined a plugin that implements a new flow control agorithm. We call it the "treatment". It is available in image ghcr.io/kalantar/llm-d-router:${RUN}-exponentialceiling
 To deploy and configure it use the scenario overlay:
 ${EXPERIMENT_ROOT}/workspace/runs/${RUN}/generated/quarticceiling/quarticceiling_config.yaml

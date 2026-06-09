@@ -4,8 +4,33 @@ research_question: >
   requests relative to sheddable-priority requests, beyond the run-to-run
   noise observed in repeated baseline executions on the same workload?
 
+  Treat each measurement as informative only after establishing confidence
+  along four axes:
+    1. Environmental noise — quantify run-to-run variability with repeated
+       baseline executions on the same workload before drawing
+       baseline-vs-treatment conclusions.
+    2. Configuration parity — verify that the deployed scenario actually
+       reflects the intended overlay stack (right router image tag, right
+       overlay paths, expected vllm spec).
+    3. Deployment health — Tekton PipelineRun succeeded, pods started and
+       reached Ready, no GPU/scheduling failures, no cordoned/tainted nodes
+       were silently picked up.
+    4. Runtime sanity — metrics in plausible ranges (no all-zero, no NaN),
+       priority-class accounting present, workload generator reported the
+       expected request count, no cluster-side error spikes.
+
+  Use the `sim2real-check` skill (available at
+  ${repo_path}/.claude/skills/sim2real-check) for these parity and health
+  checks where applicable.
+
 run_id: quartic-mk-2
 max_iterations: 5
+
+models:
+  # 1M-context Opus 4.7. Brackets force double-quoting in YAML.
+  # The 4-8 1M tag is not served by the proxy in use; 4-7[1m] is.
+  design: "claude-opus-4-7[1m]"
+  execute_analyze: "claude-opus-4-7[1m]"
 
 target_system:
   name: "llm-d distributed inference (quartic flow-control study)"
@@ -19,17 +44,13 @@ target_system:
       - baseline:  the default flow-control algorithm built into llm-d-router.
                    Image: ghcr.io/kalantar/llm-d-router:<llm-d-router commit-id>
                    Overlay: ${repo_path}/workspace/runs/quartic-mk-2/generated/baseline_config.yaml
-      - control:   a plugin that re-implements the default behavior; used to
-                   confirm the plugin harness itself is neutral.
-                   Image: ghcr.io/kalantar/llm-d-router:quartic-mk-2-constantcontrol
-                   Overlay: ${repo_path}/workspace/runs/quartic-mk-2/generated/constantcontrol/constantcontrol_config.yaml
       - treatment: a new flow-control algorithm. Image tag uses "exponentialceiling",
                    config path uses "quarticceiling" — both refer to the same arm.
                    Image: ghcr.io/kalantar/llm-d-router:quartic-mk-2-exponentialceiling
                    Overlay: ${repo_path}/workspace/runs/quartic-mk-2/generated/quarticceiling/quarticceiling_config.yaml
 
     Base vllm scenario lives in ${repo_path}/baselines/*.yaml. A run is
-    "baseline overlay → optional control/treatment overlay" applied on top.
+    "baseline overlay → optional treatment overlay" applied on top.
 
     Workloads available in ${repo_path}/workloads/ — this campaign uses
     balanced_20.yaml, balanced_30.yaml, balanced_40.yaml, balanced_50.yaml
@@ -66,7 +87,7 @@ target_system:
     - tpot_mean_ms
 
   controllable_knobs:
-    - router_variant            # one of: baseline | control | treatment
+    - router_variant            # one of: baseline | treatment
     - workload                  # one of: balanced_20 | balanced_30 | balanced_40 | balanced_50
     - namespace                 # one of: kalantar-0 | kalantar-1 | kalantar-2 | kalantar-3
     - replication_count         # integer >= 1; repeats per (variant, workload) cell
